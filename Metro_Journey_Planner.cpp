@@ -131,26 +131,34 @@ public:
         string psf;
         double min_dis;
         double min_time;
+
+        bool operator<(const Pair& other) const {
+            return min_dis < other.min_dis;
+        }
     };
 
     string get_minimum_distance(const string& src, const string& dst) {
         double mini = numeric_limits<double>::infinity();
         string ans = "";
         unordered_map<string, bool> processed;
-        vector<Pair> stack;
+        multiset<Pair> pq;
+
         Pair sp;
         sp.v_name = src;
         sp.psf = src + "  ";
         sp.min_dis = 0;
         sp.min_time = 0;
-        stack.push_back(sp);
-        while (!stack.empty()) {
-            Pair rp = stack.back();
-            stack.pop_back();
+        pq.insert(sp);
+
+        while (!pq.empty()) {
+            Pair rp = *pq.begin();
+            pq.erase(pq.begin());
+
             if (processed.find(rp.v_name) != processed.end()) {
                 continue;
             }
             processed[rp.v_name] = true;
+
             if (rp.v_name == dst) {
                 double temp = rp.min_dis;
                 if (temp < mini) {
@@ -159,18 +167,15 @@ public:
                 }
                 continue;
             }
+
             Vertex& rpvtx = vtces[rp.v_name];
-            vector<string> nbrs;
             for (const auto& nbr : rpvtx.nbrs) {
-                nbrs.push_back(nbr.first);
-            }
-            for (const auto& nbr : nbrs) {
-                if (processed.find(nbr) == processed.end()) {
+                if (processed.find(nbr.first) == processed.end()) {
                     Pair np;
-                    np.v_name = nbr;
-                    np.psf = rp.psf + nbr + "  ";
-                    np.min_dis = rp.min_dis + rpvtx.nbrs[nbr];
-                    stack.push_back(np);
+                    np.v_name = nbr.first;
+                    np.psf = rp.psf + nbr.first + "  ";
+                    np.min_dis = rp.min_dis + nbr.second;
+                    pq.insert(np);
                 }
             }
         }
